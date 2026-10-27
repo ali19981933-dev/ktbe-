@@ -178,7 +178,7 @@ function oldView(f){return`<div class="pg" style="padding:44px;font:17px/2 Cairo
 const GS=()=>{try{return JSON.parse(localStorage.getItem('bsr_gh')||'{}')}catch(e){return{}}};
 function ghSave(){try{localStorage.setItem('bsr_gh',JSON.stringify({o:$('#ghO').value.trim(),r:$('#ghR').value.trim(),b:$('#ghB').value.trim()||'main',t:$('#ghT').value.trim()}));toast('تم حفظ الإعدادات')}catch(e){toast('تعذّر الحفظ')}}
 const u8b=s=>{const b=new TextEncoder().encode(s);let r='';for(let i=0;i<b.length;i+=8192)r+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(r)},b8u=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g,'')),c=>c.charCodeAt(0)));
-async function gh(p,o){const c=GS();if(!c.o||!c.r||!c.t)throw new Error('أدخل إعدادات GitHub أولاً');const put=o&&o.method=='PUT',r=await fetch(`https://api.github.com/repos/${c.o}/${c.r}/contents/${p}${put?'':'?ref='+(c.b||'main')}`,{...o,headers:{Authorization:'Bearer '+c.t,Accept:'application/vnd.github+json'}});if(r.status==404)return null;if(!r.ok)throw new Error('GitHub '+r.status);return r.json()}
+async function gh(p,o){const c=GS();if(!c.o||!c.r||!c.t)throw new Error('أدخل إعدادات GitHub أولاً');const put=o&&o.method=='PUT',r=await fetch(`https://api.github.com/repos/${c.o}/${c.r}/contents/${p}${put?'':'?ref='+(c.b||'main')}`,{...o,headers:{Authorization:'Bearer '+c.t,Accept:'application/vnd.github+json'}});if(r.status==404&&!put)return null;if(r.status==401)throw new Error('التوكن غير صحيح أو منتهي');if(r.status==403||r.status==404)throw new Error('تحقق من اسم المستودع وأن صلاحية Contents هي Read and write');if(!r.ok)throw new Error('GitHub '+r.status);return r.json()}
 async function ghPut(p,b64,msg){const old=await gh(p);return gh(p,{method:'PUT',body:JSON.stringify({message:msg,content:b64,branch:GS().b||'main',...(old?{sha:old.sha}:{})})})}
 async function sync(){try{toast('جاري المزامنة…');const pushed=new Set(JSON.parse(localStorage.getItem('bsr_pushed')||'[]')),r=await gh('archive.json');let a=load();
 if(r){const ids=new Set(a.map(x=>x.id));JSON.parse(b8u(r.content)).forEach(x=>{if(!ids.has(x.id))a.push(x)});a.sort((x,y)=>y.id-x.id);store(a)}
@@ -199,6 +199,6 @@ $('#date').value=new Date().toISOString().slice(0,10);
 $('#topic').addEventListener('change',()=>{delete ED.tx;delete ED.sj;upd()});
 $('#pvbox').addEventListener('input',e=>{const z=e.target.closest&&e.target.closest('[data-z]');if(z)ED[z.dataset.z]=z.innerHTML});
 $('#pvbox').addEventListener('paste',e=>{e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'))});
-{const c=GS();$('#ghO').value=c.o||'';$('#ghR').value=c.r||'';$('#ghB').value=c.b||'main';$('#ghT').value=c.t||''}
+{const c=GS();$('#ghO').value=c.o||'ali19981933-dev';$('#ghR').value=c.r||'ktbe-data';$('#ghB').value=c.b||'main';$('#ghT').value=c.t||''}
 $('#kind').onchange();thumbs();cnt();
 </script></body></html>
